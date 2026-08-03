@@ -92,6 +92,24 @@ export function classifyReviewScope(input: ClassifyReviewScopeInput): ClassifyRe
 
   if (reviewLane) {
     assumptions.push({ field: 'reviewLane', value: reviewLane, rationale: 'Provided explicitly by the caller.' });
+    // An explicit hint is trusted, but it can still conflict with the actual
+    // file evidence (e.g. a "behavior" hint on a diff that also touches
+    // policy-only files) — validatePrBody() would reject that combination.
+    // Surface it as a finding now rather than silently resolving into a body
+    // that fails validation downstream.
+    const hintCompat = config.taxonomy.compatibility.find((c) => c.lane === reviewLane);
+    if (hintCompat) {
+      const uncovered = presentUnits.filter(
+        (unit) => !((hintCompat.anyProductUnit && productUnits.has(unit)) || (hintCompat.units ?? []).includes(unit)),
+      );
+      if (uncovered.length > 0) {
+        findings.push({
+          kind: 'lane-hint-scope-mismatch',
+          severity: 'warning',
+          message: `reviewLaneHint "${reviewLane}" does not cover files classified as: ${uncovered.join(', ')}. validate_pr_body will reject this combination unless those files are split into their own slice or the lane/unit is reconsidered.`,
+        });
+      }
+    }
   } else if (fullCoverageLanes.length === 1) {
     reviewLane = fullCoverageLanes[0].lane;
     assumptions.push({ field: 'reviewLane', value: reviewLane, rationale: `All changed files' review units are compatible with lane "${reviewLane}".` });

@@ -97,6 +97,38 @@ describe('classifyReviewScope', () => {
     if (second.status === 'resolved') expect(second.reviewUnit).toBe('contract');
   });
 
+  it('flags (but does not block on) an explicit reviewLaneHint that conflicts with a non-product unit present in the diff', () => {
+    // Regression: found via dogfooding on an Android project — an explicit
+    // "behavior" hint was trusted unconditionally even though the diff also
+    // touched policy-only files, which validatePrBody() then rejected. The
+    // hint must still surface that mismatch as a finding.
+    const result = classifyReviewScope({
+      changedFiles: ['surface/a.ts', 'docs/guide.md'],
+      reviewLaneHint: 'behavior',
+      config: multiProductUnitConfig,
+    });
+    expect(result.status).toBe('resolved');
+    if (result.status === 'resolved') {
+      expect(result.reviewLane).toBe('behavior');
+      const mismatch = result.findings.find((f) => f.kind === 'lane-hint-scope-mismatch');
+      expect(mismatch).toBeDefined();
+      expect(mismatch?.message).toContain('docs');
+      expect(mismatch?.severity).toBe('warning');
+    }
+  });
+
+  it('does not flag a reviewLaneHint whose lane fully covers the present units', () => {
+    const result = classifyReviewScope({
+      changedFiles: ['surface/a.ts'],
+      reviewLaneHint: 'behavior',
+      config: multiProductUnitConfig,
+    });
+    expect(result.status).toBe('resolved');
+    if (result.status === 'resolved') {
+      expect(result.findings.some((f) => f.kind === 'lane-hint-scope-mismatch')).toBe(false);
+    }
+  });
+
   it('asks about a half-triggered pairing ban', () => {
     const result = classifyReviewScope({
       changedFiles: ['a/publish.ts'],
