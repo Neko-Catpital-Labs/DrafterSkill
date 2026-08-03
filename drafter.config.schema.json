@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DrafterConfig",
+  "description": "Configuration for @neko-catpital-labs/drafter-core, drafter-skill, and drafter-mcp. Every field is optional; missing fields fall back to the built-in generic default (see packages/core/src/config/default-taxonomy.ts).",
+  "type": "object",
+  "properties": {
+    "taxonomy": {
+      "type": "object",
+      "properties": {
+        "lanes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "enum": ["behavior", "refactor", "proof", "cleanup", "policy", "docs"] },
+              "description": { "type": "string" }
+            },
+            "required": ["id"]
+          }
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "isProductUnit": { "type": "boolean" },
+              "description": { "type": "string" }
+            },
+            "required": ["id", "isProductUnit"]
+          }
+        },
+        "compatibility": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "lane": { "enum": ["behavior", "refactor", "proof", "cleanup", "policy", "docs"] },
+              "units": { "type": "array", "items": { "type": "string" } },
+              "anyProductUnit": { "type": "boolean" }
+            },
+            "required": ["lane"]
+          }
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "properties": {
+        "pathRules": {
+          "type": "array",
+          "description": "Ordered, first-match-wins path classification rules.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "pathGlob": { "type": "string", "description": "picomatch glob, matched against the full repo-relative path." },
+              "basenamePattern": { "type": "string", "description": "Regex source, matched against the file's basename." },
+              "unit": { "type": "array", "items": { "type": "string" }, "description": "Unit id(s) this rule assigns. Empty array = matched but deliberately neutral." }
+            },
+            "required": ["unit"]
+          }
+        },
+        "pairingBans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "paths": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+              "appliesToLanes": { "type": "array", "items": { "enum": ["behavior", "refactor", "proof", "cleanup", "policy", "docs"] } },
+              "message": { "type": "string" }
+            },
+            "required": ["id", "paths", "message"]
+          }
+        },
+        "textPatterns": {
+          "type": "array",
+          "description": "Regex-over-prose unit detection. Defaults to empty — a repo's own keyword vocabulary is required to make this safe.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "unit": { "type": "string" },
+              "patterns": { "type": "array", "items": { "type": "string" } },
+              "flags": { "type": "string" }
+            },
+            "required": ["unit", "patterns"]
+          }
+        }
+      }
+    },
+    "changeTypes": {
+      "type": "object",
+      "properties": {
+        "allowedOperations": { "type": "array", "items": { "type": "string" } },
+        "topLevelDirs": { "type": "array", "items": { "type": "string" }, "description": "Optional allowlist tightening the generic path-like check for 'Change types:' entries." }
+      }
+    },
+    "diffAtomicity": {
+      "type": "object",
+      "properties": {
+        "monorepoDirs": { "type": "array", "items": { "type": "string" }, "description": "e.g. ['packages'] to group unrelated-areas findings as packages/<name> instead of the top-level segment." },
+        "generatedDirs": { "type": "array", "items": { "type": "string" } },
+        "codeExtensions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "prBody": {
+      "type": "object",
+      "properties": {
+        "summaryWordLimit": { "type": "integer", "minimum": 1 },
+        "changedFilesWarningThreshold": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

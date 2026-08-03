@@ -1,0 +1,26 @@
+{
+  "name": "@neko-catpital-labs/drafter-skill",
+  "version": "0.1.0",
+  "description": "Portable draft-pr and split-scope skills, installable into Claude Code, Cursor, Codex, or omp",
+  "type": "module",
+  "bin": {
+    "drafter-skill": "bin/drafter-skill.mjs"
+  },
+  "files": [
+    "bin/**/*",
+    "src/**/*",
+    "skills/**/*",
+    "package.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "echo 'no build step (plain ESM)' && exit 0",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

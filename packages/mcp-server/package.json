@@ -1,0 +1,33 @@
+{
+  "name": "@neko-catpital-labs/drafter-mcp",
+  "version": "0.1.0",
+  "description": "Stdio MCP server exposing draft-pr/split-scope's PR-drafting and scope/ambiguity-clarification tools",
+  "type": "module",
+  "bin": {
+    "drafter-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*",
+    "package.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "pnpm run build && vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@neko-catpital-labs/drafter-core": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@neko-catpital-labs/drafter-core",
+  "version": "0.1.0",
+  "description": "Portable PR-drafting and scope/ambiguity-clarification validators, classifiers, and config loader",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "package.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "mermaid": "^11.15.0",
+    "jsdom": "^25.0.1",
+    "picomatch": "^4.0.2",
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.0.0",
+    "@types/picomatch": "^3.0.2",
+    "tsup": "^8.0.0",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

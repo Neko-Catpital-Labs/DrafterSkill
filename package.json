@@ -1,0 +1,29 @@
+{
+  "name": "drafterskill",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Draft and split tasks: a portable PR-drafting and scope/ambiguity-clarification skill + MCP server, usable in any repo with any AI coding agent",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "pnpm@10.31.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neko-Catpital-Labs/DrafterSkill.git"
+  },
+  "license": "MIT"
+}

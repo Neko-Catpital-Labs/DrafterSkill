@@ -1,0 +1,87 @@
+import type { DrafterConfig } from '../types.js';
+
+/** Ported from scripts/pr-body-template.md, generalized to list the configured lanes/units. */
+export function renderPrBodyTemplate(config: DrafterConfig): string {
+  const lanes = config.taxonomy.lanes.map((l) => `\`${l.id}\``).join(', ');
+  const exampleUnits = config.taxonomy.units.slice(0, 3).map((u) => `\`${u.id}\``).join(', ');
+
+  return `## Summary
+
+Describe what changed and why in plain English.
+
+Write paragraphs, not bullets. Keep each paragraph under ${config.prBody.summaryWordLimit} words.
+
+Put one idea in each paragraph. If one idea leads to another, split them into separate short paragraphs.
+
+## Review Claim
+
+State the one thing the reviewer is being asked to approve.
+
+## Review Lane
+
+Choose exactly one: ${lanes}.
+
+## Review Unit
+
+Choose the matching review unit, such as ${exampleUnits}.
+
+## Safety Invariant
+
+Explain why this slice is safe to review locally.
+
+## Slice Rationale
+
+Explain why this work is split here instead of bundled elsewhere.
+
+## Non-goals
+
+List what this slice explicitly does not change.
+
+For a \`refactor\` Review Lane, include: \`No behavior change.\` (or an equivalent accepted unchanged-behavior claim).
+
+## Architecture
+
+Only keep this section if the change affects component interactions, control flow, or data flow.
+Quote Mermaid labels when they contain prose, punctuation, or code-ish text like \`example[]\`.
+
+### Before
+
+\`\`\`mermaid
+graph TD
+    A["Old flow"]
+\`\`\`
+
+### After
+
+\`\`\`mermaid
+graph TD
+    A["New flow"]
+\`\`\`
+
+## Test Plan
+
+<details>
+<summary>Test Plan</summary>
+
+- [ ] \`exact command\`
+- [ ] \`exact command\`
+
+</details>
+
+## Visual Proof
+
+Required when the diff changes UI-impacting files. Include before/after screenshots or a video link.
+
+## Revert Plan
+
+<details>
+<summary>Revert Plan</summary>
+
+- Safe to revert? Yes/No
+- Revert command: \`git revert <sha>\`
+- Post-revert steps: None
+- Data migration? No
+
+</details>
+`;
+}
