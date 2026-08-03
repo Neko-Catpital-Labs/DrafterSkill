@@ -14,6 +14,7 @@ const unitDefSchema = z.object({
   id: z.string().min(1),
   isProductUnit: z.boolean(),
   description: z.string().optional(),
+  coLocatesWithProductUnits: z.boolean().optional(),
 });
 
 const laneCompatibilitySchema = z.object({

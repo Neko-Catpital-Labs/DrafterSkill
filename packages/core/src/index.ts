@@ -17,6 +17,7 @@ export {
   validateReviewUnitFocus,
   classifyReviewUnitsForPath,
   reviewUnitsForChangedFiles,
+  forbiddenUnitsForLane,
   validateReviewUnitChangedFiles,
   validateKnownReviewBoundaries,
   parseChangeTypeItems,

@@ -25,6 +25,31 @@ their own matching lane.
 don't mix a product change with docs/cleanup/policy/proof in one PR — without
 guessing at your repo's internal architecture.
 
+## Letting tests ride along with their feature (`coLocatesWithProductUnits`)
+
+split-scope's Boundary Rules state an exception: "directly affected tests ...
+stay with the change that requires them." By default, the zero-config
+taxonomy's path rules classify test files as **neutral** (`unit: []`), so
+they never conflict with anything — that's why this works out of the box
+with no config.
+
+If you instead give tests their own real unit (e.g. so a repo can also
+author a dedicated `proof`-lane PR containing only tests), mark that unit
+`"coLocatesWithProductUnits": true`. This tells the validator: when a file of
+the *declared* product unit is also present in the diff, this unit's files
+are not forbidden — matching the Boundary Rules exception. It does **not**
+relax anything when no product-unit file is present; a standalone test-only
+diff still needs a lane whose `compatibility` entry names that unit
+directly (e.g. the `proof` lane naming the `proof` unit).
+
+```json
+{ "id": "proof", "isProductUnit": false, "coLocatesWithProductUnits": true }
+```
+
+The built-in default config's own `proof` unit already sets this, for
+consistency — even though its default path rule keeps tests neutral rather
+than classifying them into `proof` at all.
+
 ## Path classification
 
 `classification.pathRules` is an ordered, first-match-wins list. Each rule

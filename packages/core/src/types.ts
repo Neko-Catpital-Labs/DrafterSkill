@@ -11,6 +11,16 @@ export interface UnitDef {
   id: string;
   isProductUnit: boolean;
   description?: string;
+  /**
+   * When true, files classified under this unit are allowed to ship
+   * alongside ANY product unit already present in the same diff, instead of
+   * being flagged as an incompatible mix — split-scope's Boundary Rules
+   * exception: "directly affected tests ... stay with the change that
+   * requires them." Only relaxes the check when a product unit is present;
+   * a diff containing only this unit's files still needs a lane whose
+   * `compatibility` entry names it directly.
+   */
+  coLocatesWithProductUnits?: boolean;
 }
 
 export interface LaneCompatibility {

@@ -1,4 +1,5 @@
 import {
+  forbiddenUnitsForLane,
   formatReviewUnits,
   getLabelSection,
   getMarkdownSection,
@@ -214,20 +215,12 @@ export function validatePrScope(opts: { changedFiles?: string[]; reviewLane?: st
   const errors: string[] = [];
   if (!reviewLane || changedFiles.length === 0) return errors;
 
-  const compat = config.taxonomy.compatibility.find((c) => c.lane === (reviewLane as ReviewLaneId));
-  if (compat) {
-    const productUnits = new Set(config.taxonomy.units.filter((u) => u.isProductUnit).map((u) => u.id));
-    const presentUnits = reviewUnitsForChangedFiles(changedFiles, config);
-    const forbidden = presentUnits.filter((unit) => {
-      if (compat.anyProductUnit && productUnits.has(unit)) return false;
-      if ((compat.units ?? []).includes(unit)) return false;
-      return true;
-    });
-    if (forbidden.length > 0) {
-      errors.push(
-        `Review lane ${reviewLane} cannot ship with ${formatReviewUnits(forbidden, config)} files in the same PR. Split ${reviewLane} work from those files into their own slice.`,
-      );
-    }
+  const presentUnits = reviewUnitsForChangedFiles(changedFiles, config);
+  const forbidden = forbiddenUnitsForLane(presentUnits, reviewLane, config);
+  if (forbidden.length > 0) {
+    errors.push(
+      `Review lane ${reviewLane} cannot ship with ${formatReviewUnits(forbidden, config)} files in the same PR. Split ${reviewLane} work from those files into their own slice.`,
+    );
   }
 
   if (reviewLane === 'refactor') {

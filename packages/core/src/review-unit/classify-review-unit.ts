@@ -43,6 +43,38 @@ function productUnitIds(config: DrafterConfig): Set<string> {
   return new Set(config.taxonomy.units.filter((u) => u.isProductUnit).map((u) => u.id));
 }
 
+function coLocatingUnitIds(config: DrafterConfig): Set<string> {
+  return new Set(config.taxonomy.units.filter((u) => u.coLocatesWithProductUnits).map((u) => u.id));
+}
+
+/**
+ * The single shared "which present units are forbidden under this lane"
+ * computation, used by validatePrScope, validateReviewUnitChangedFiles, and
+ * classifyReviewScope's lane coverage/mismatch checks — previously each
+ * reimplemented this independently, which let them disagree (found via
+ * dogfooding: a directly-affected test file landing with its feature was
+ * silently accepted by classifyReviewScope but hard-rejected by
+ * validatePrBody). A unit marked `coLocatesWithProductUnits` is exempted
+ * whenever at least one product unit is also present — split-scope's
+ * Boundary Rules exception ("directly affected tests ... stay with the
+ * change that requires them") applies only when there's a product change
+ * present to be "directly affected"; a diff of ONLY co-locating-unit files
+ * still needs a lane whose `compatibility` entry names that unit directly.
+ */
+export function forbiddenUnitsForLane(presentUnits: string[], reviewLane: string, config: DrafterConfig): string[] {
+  const compat = config.taxonomy.compatibility.find((c) => c.lane === (reviewLane as ReviewLaneId));
+  if (!compat) return [];
+  const productUnits = productUnitIds(config);
+  const coLocating = coLocatingUnitIds(config);
+  const hasProductUnitPresent = presentUnits.some((unit) => productUnits.has(unit));
+  return presentUnits.filter((unit) => {
+    if (compat.anyProductUnit && productUnits.has(unit)) return false;
+    if ((compat.units ?? []).includes(unit)) return false;
+    if (hasProductUnitPresent && coLocating.has(unit)) return false;
+    return true;
+  });
+}
+
 function validUnitIds(config: DrafterConfig): Set<string> {
   return new Set(config.taxonomy.units.map((u) => u.id));
 }
@@ -194,7 +226,13 @@ export function validateReviewUnitChangedFiles(opts: {
   const { declaredReviewUnit, changedFiles = [], config, context } = opts;
   if (!validUnitIds(config).has(declaredReviewUnit) || changedFiles.length === 0) return [];
 
-  const forbidden = reviewUnitsForChangedFiles(changedFiles, config).filter((unit) => unit !== declaredReviewUnit);
+  const presentUnitsForCheck = reviewUnitsForChangedFiles(changedFiles, config);
+  const declaredIsProduct = productUnitIds(config).has(declaredReviewUnit);
+  const hasProductUnitPresent = declaredIsProduct && presentUnitsForCheck.includes(declaredReviewUnit);
+  const coLocating = coLocatingUnitIds(config);
+  const forbidden = presentUnitsForCheck.filter(
+    (unit) => unit !== declaredReviewUnit && !(hasProductUnitPresent && coLocating.has(unit)),
+  );
   if (forbidden.length === 0) return [];
 
   return [

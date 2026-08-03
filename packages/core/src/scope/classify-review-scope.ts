@@ -1,4 +1,4 @@
-import { classifyReviewUnitsForPath, reviewUnitsForChangedFiles } from '../review-unit/classify-review-unit.js';
+import { classifyReviewUnitsForPath, forbiddenUnitsForLane, reviewUnitsForChangedFiles } from '../review-unit/classify-review-unit.js';
 import { lintDiffAtomicity } from '../diff-atomicity/lint-diff-atomicity.js';
 import { proposeSafetyInvariant } from '../safety-invariant/propose-safety-invariant.js';
 import type { DrafterConfig, ReviewLaneId } from '../types.js';
@@ -61,11 +61,9 @@ export type ClassifyReviewScopeResult = ScopeResolved | ScopeNeedsClarification;
 
 function laneCoverage(config: DrafterConfig, lane: ReviewLaneId, presentUnits: string[]): number {
   if (presentUnits.length === 0) return 1;
-  const compat = config.taxonomy.compatibility.find((c) => c.lane === lane);
-  if (!compat) return 0;
-  const productUnits = new Set(config.taxonomy.units.filter((u) => u.isProductUnit).map((u) => u.id));
-  const covered = presentUnits.filter((unit) => (compat.anyProductUnit && productUnits.has(unit)) || (compat.units ?? []).includes(unit));
-  return covered.length / presentUnits.length;
+  if (!config.taxonomy.compatibility.some((c) => c.lane === lane)) return 0;
+  const forbidden = forbiddenUnitsForLane(presentUnits, lane, config);
+  return (presentUnits.length - forbidden.length) / presentUnits.length;
 }
 
 function buildClarificationText(questions: ScopeQuestion[]): string {
@@ -97,11 +95,8 @@ export function classifyReviewScope(input: ClassifyReviewScopeInput): ClassifyRe
     // policy-only files) — validatePrBody() would reject that combination.
     // Surface it as a finding now rather than silently resolving into a body
     // that fails validation downstream.
-    const hintCompat = config.taxonomy.compatibility.find((c) => c.lane === reviewLane);
-    if (hintCompat) {
-      const uncovered = presentUnits.filter(
-        (unit) => !((hintCompat.anyProductUnit && productUnits.has(unit)) || (hintCompat.units ?? []).includes(unit)),
-      );
+    if (config.taxonomy.compatibility.some((c) => c.lane === reviewLane)) {
+      const uncovered = forbiddenUnitsForLane(presentUnits, reviewLane, config);
       if (uncovered.length > 0) {
         findings.push({
           kind: 'lane-hint-scope-mismatch',

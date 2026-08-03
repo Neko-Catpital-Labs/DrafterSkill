@@ -124,4 +124,68 @@ describe('validatePrBody', () => {
     const result = await validatePrBody(body, { config: DEFAULT_CONFIG, changedFiles: ['src/app.ts'] });
     expect(result.valid).toBe(true);
   });
+
+  it('allows a directly-affected test file to ship with its feature under a unit marked coLocatesWithProductUnits', async () => {
+    // Regression: found via dogfooding — a repo whose config classifies test
+    // files as a real "proof" unit (rather than DEFAULT_CONFIG's neutral
+    // tests-neutral rule) had classifyReviewScope() silently resolve a
+    // feature+its own test file together, while validatePrBody() then
+    // rejected that exact same combination. split-scope's own Boundary Rules
+    // state directly-affected tests should stay with the change; the fix is
+    // config-level (coLocatesWithProductUnits), not a special-case regex.
+    const config = {
+      ...DEFAULT_CONFIG,
+      taxonomy: {
+        lanes: DEFAULT_CONFIG.taxonomy.lanes,
+        units: [
+          { id: 'auth', isProductUnit: true },
+          { id: 'proof', isProductUnit: false, coLocatesWithProductUnits: true },
+        ],
+        compatibility: [
+          { lane: 'behavior', anyProductUnit: true },
+          { lane: 'refactor', anyProductUnit: true },
+          { lane: 'proof', units: ['proof'] },
+        ],
+      },
+      classification: {
+        ...DEFAULT_CONFIG.classification,
+        pathRules: [
+          { id: 'tests', pathGlob: 'src/**/*.test.ts', unit: ['proof'] },
+          { id: 'auth', pathGlob: 'src/auth/**', unit: ['auth'] },
+        ],
+      },
+    };
+    const changedFiles = ['src/auth/router.ts', 'src/auth/router.test.ts'];
+    const body = validBody({ reviewLane: 'behavior', reviewUnit: 'auth' });
+    const result = await validatePrBody(body, { config, changedFiles });
+    expect(result.valid).toBe(true);
+  });
+
+  it('still rejects a proof-unit file that is NOT accompanied by any product unit under a product-only lane', async () => {
+    const config = {
+      ...DEFAULT_CONFIG,
+      taxonomy: {
+        lanes: DEFAULT_CONFIG.taxonomy.lanes,
+        units: [
+          { id: 'auth', isProductUnit: true },
+          { id: 'proof', isProductUnit: false, coLocatesWithProductUnits: true },
+        ],
+        compatibility: [
+          { lane: 'behavior', anyProductUnit: true },
+          { lane: 'proof', units: ['proof'] },
+        ],
+      },
+      classification: {
+        ...DEFAULT_CONFIG.classification,
+        pathRules: [{ id: 'tests', pathGlob: 'src/**/*.test.ts', unit: ['proof'] }],
+      },
+    };
+    // Declaring "behavior"/"auth" over a diff that is ONLY a standalone test
+    // file (no product unit present) must still fail — the co-location
+    // exception only applies when a product unit is actually present.
+    const changedFiles = ['src/auth/router.test.ts'];
+    const body = validBody({ reviewLane: 'behavior', reviewUnit: 'auth' });
+    const result = await validatePrBody(body, { config, changedFiles });
+    expect(result.valid).toBe(false);
+  });
 });

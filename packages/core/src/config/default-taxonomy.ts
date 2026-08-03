@@ -22,7 +22,7 @@ export const DEFAULT_CONFIG: DrafterConfig = {
       { id: 'product', isProductUnit: true },
       { id: 'cleanup', isProductUnit: false },
       { id: 'policy', isProductUnit: false },
-      { id: 'proof', isProductUnit: false },
+      { id: 'proof', isProductUnit: false, coLocatesWithProductUnits: true },
       { id: 'docs', isProductUnit: false },
     ],
     compatibility: [

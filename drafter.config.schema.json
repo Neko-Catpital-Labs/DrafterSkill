@@ -25,7 +25,11 @@
             "properties": {
               "id": { "type": "string" },
               "isProductUnit": { "type": "boolean" },
-              "description": { "type": "string" }
+              "description": { "type": "string" },
+              "coLocatesWithProductUnits": {
+                "type": "boolean",
+                "description": "When true, files under this unit may ship alongside ANY product unit already present in the diff, instead of being flagged as an incompatible mix (split-scope's Boundary Rules exception: directly-affected tests stay with the change that requires them). Only relaxes the check when a file of the DECLARED product unit is also present; a diff of only this unit's files still needs a lane whose compatibility entry names it directly. The default config's own 'proof' unit sets this to true."
+              }
             },
             "required": ["id", "isProductUnit"]
           }
