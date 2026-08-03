@@ -1,6 +1,6 @@
 {
   "name": "@neko-catpital-labs/drafter-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stdio MCP server exposing draft-pr/split-scope's PR-drafting and scope/ambiguity-clarification tools",
   "type": "module",
   "bin": {
