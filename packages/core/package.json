@@ -1,6 +1,6 @@
 {
   "name": "@neko-catpital-labs/drafter-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Portable PR-drafting and scope/ambiguity-clarification validators, classifiers, and config loader",
   "type": "module",
   "main": "dist/index.js",
