@@ -23,11 +23,7 @@ jobs:
 
   release:
     needs: build-and-test
-    # Skip cleanly until NPM_TOKEN is added as a repo secret -- without it,
-    # changesets/action's PR-based flow also can't run in this org (Actions
-    # are blocked from creating/approving PRs org-wide), so there's nothing
-    # useful this job can do yet.
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.NPM_TOKEN != ''
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -47,7 +43,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r build
+      - name: Check npm token
+        id: check
+        # Job-level `if:` can't reference `secrets` directly (fails workflow
+        # validation); checking it in a step and gating the next step on the
+        # step's own output is the supported way to skip cleanly.
+        run: echo "enabled=${{ secrets.NPM_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
       - name: Create release PR or publish
+        if: steps.check.outputs.enabled == 'true'
         uses: changesets/action@v1
         with:
           publish: pnpm release
